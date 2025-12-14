@@ -15,6 +15,11 @@ argsp.add_argument("path",
                    help="Where to create the repository.")
 
 def main(argv=sys.argv[1:]):
+
+    # If no arguments, or first argument is "help", show help
+    if len(argv)==0 or argv[0] == "help":
+        argv = ["-h"]
+        
     args = argparser.parse_args(argv)
     match args.command:
         case "add"          : cmd_add(args)
