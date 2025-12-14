@@ -1,16 +1,32 @@
+#![allow(unused_variables)]
+#![allow(dead_code)]
 use std::env;
 
 fn cmd_add(args: &[String]) {
     println!("cmd_add called with {:?}", args);
 }
 
+fn print_help() {
+    println!("Usage: git <command> [options]");
+    println!("Commands:");
+    println!("    help          Show this info");
+    // println!("    init          Initialize a repository");
+    // println!("    add           Add files to staging area");
+    // println!("    cat-file      Show object content");
+    // println!("    check-ignore  Check ignored files");
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
+    if (args.len()) == 1 {
+        print_help();
+        return;
+    }
     let command = &*args[1];
     let args: &[String] = &args;  
 
     match command {
-        "add"          => cmd_add(args),
+        "help"          => print_help(),
         // "cat-file"     => cmd_cat_file(args)
         // "check-ignore" => cmd_check_ignore(args)
         // "checkout"     => cmd_checkout(args)
