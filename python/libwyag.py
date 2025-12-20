@@ -91,7 +91,7 @@ def repo_create(path):
     repo = Repository(path, force = True)
     if os.path.exists(repo.worktree):
         assert(os.path.isdir(repo.worktree))
-        assert(not(os.path.exists(repo.gitdir) or os.listdir(repo.gitdir)))
+        assert(not(os.path.exists(repo.gitdir) and os.listdir(repo.gitdir)))
     else:
         os.makedirs(repo.worktree)
 
