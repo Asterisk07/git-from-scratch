@@ -1,4 +1,5 @@
 target/
 
+.vscode
 src/try*
 impcmd.txt

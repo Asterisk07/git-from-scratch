@@ -1,10 +1,9 @@
-# Create git wrapper
-
 help:
 	@echo "Makefile for git-wyag"
 
 # Create git wrapper
 setup:
+	cargo check
 	@chmod +x env/git
 	@chmod +x env/make
 
