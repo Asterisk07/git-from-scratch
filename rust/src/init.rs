@@ -88,20 +88,20 @@ fn repo_create(path: &str) -> Repository {
     // Python: open("file.txt", "w")
 
     writeln!(
-        File::create(path.join("HEAD")).unwrap(),
+        File::create(gitpath.join("HEAD")).unwrap(),
         "ref : refs/heads/master"
     )
     .unwrap();
     writeln!(
-        File::create(path.join("description")).unwrap(),
+        File::create(gitpath.join("description")).unwrap(),
         "Unnamed repo, edit description to name it"
     )
     .unwrap();
-    writeln!(
-        File::create(path.join("config")).unwrap(),
-        "ref : refs/heads/mastere"
-    )
-    .unwrap();
+    // writeln!(
+    //     File::create(path.join("config")).unwrap(),
+    //     "ref : refs/heads/mastere"
+    // )
+    // .unwrap();
     let con = repo_default_config();
     con.write(&repo.config_path).unwrap();
     repo
