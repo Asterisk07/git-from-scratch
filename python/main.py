@@ -1,6 +1,7 @@
 import sys
 from args import create_parser
 from init import cmd_init
+from object import cmd_cat_file, cmd_hash_object
 
 def main(argv=sys.argv[1:]):
 
