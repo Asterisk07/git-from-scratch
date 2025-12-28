@@ -34,7 +34,7 @@ def repo_file(repo, *path, mkdir = False):
     # create path upto the file
     # print("found repo at : ",repo.gitdir)
     # print("received args: ", path)
-    if len(path) == 1 or repo_dir(repo, *path[-1], mkdir = mkdir):
+    if len(path) == 1 or repo_dir(repo, *path[:-1], mkdir = mkdir):
         return repo_path(repo, *path)
 
 def repo_dir(repo, *path, mkdir = False):
