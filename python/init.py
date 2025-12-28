@@ -1,5 +1,9 @@
 import configparser
 import os 
+import logging
+
+# This creates a logger specifically for this file
+logger = logging.getLogger(__name__)
 
 class Repository:
     _git_name = '.git'
@@ -32,16 +36,16 @@ def repo_path(repo, *path):
 
 def repo_file(repo, *path, mkdir = False):
     # create path upto the file
-    # print("found repo at : ",repo.gitdir)
-    # print("received args: ", path)
+    logger.debug("found repo at : %s", repo.gitdir)
+    logger.debug("received args: %s", path)
     if len(path) == 1 or repo_dir(repo, *path[:-1], mkdir = mkdir):
         return repo_path(repo, *path)
 
 def repo_dir(repo, *path, mkdir = False):
     # create path upto dir
-    # print("found repo at : ",repo.gitdir)
+    logger.debug("found repo at : %s ",repo.gitdir)
     path1 = repo_path(repo, *path)
-    # print("repo path found : ",path1)
+    logger.debug("repo path found : %s ",path1)
     if os.path.exists(path1):
         if os.path.isdir(path1):
             return path1

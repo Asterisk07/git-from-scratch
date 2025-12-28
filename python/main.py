@@ -1,4 +1,5 @@
 import sys
+import logging
 from args import create_parser
 from init import cmd_init
 from object import cmd_cat_file, cmd_hash_object
@@ -11,6 +12,16 @@ def main(argv=sys.argv[1:]):
     
     argparser = create_parser()
     args = argparser.parse_args(argv)
+    if args.debug:
+        # Show everything DEBUG and above
+        logging.basicConfig(level=logging.DEBUG, format='%(levelname)s [%(name)s]: %(message)s')
+
+        logger = logging.getLogger(__name__)
+        logger.debug("Args are : %s", args)
+    else:
+        # Show only INFO and above (effectively hides DEBUG)
+        logging.basicConfig(level=logging.INFO, format='%(message)s')
+
     match args.command:
         case "add"          : cmd_add(args)
         case "cat-file"     : cmd_cat_file(args)

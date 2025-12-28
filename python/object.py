@@ -2,8 +2,12 @@ import hashlib
 import os
 import zlib 
 from abc import ABC, abstractmethod
+import logging
+
 from init import repo_file, repo_find
 from utils import cat
+
+logger = logging.getLogger(__name__)
 
 class GitObject(ABC):
     def __init__(self, data = None):
@@ -27,9 +31,9 @@ class GitBlob(GitObject):
         self.data = data
 
 def object_read(repo, hash):
-    # print("searching at : ",hash[:2],"and ",hash[2:])
+    logger.debug("searching at : %s and %s", hash[:2], hash[2:])
     path = repo_file(repo,"objects", hash[:2], hash[2:])
-    # print("im the path : ",path)
+    logger.debug("im the path : %s",path)
     assert(os.path.isfile(path))
     with open(path,'rb') as f:
         raw = zlib.decompress(f.read())
@@ -59,7 +63,7 @@ def get_hash(obj):
 
 def object_write(obj, repo):
     hash, content = get_hash(obj)
-    print("searching at : ",hash[:2],"and ",hash[2:])
+    logger.debug("searching at : %s and %s", hash[:2], hash[2:])
     if repo:
         path = repo_file(repo,"objects", hash[:2], hash[2:], mkdir = True)
 
@@ -76,12 +80,12 @@ def cat_file(repo, obj, fmt=None):
 
 def cmd_cat_file(args):
     repo = repo_find()
-    # print("found repo at : ",repo.gitdir)
+    logger.debug("found repo at : %s",repo.gitdir)
     cat_file(repo, args.object, fmt=args.type.encode())
 
 def object_hash(f, type1, repo = None):
     data = f.read()
-    print("received type : ",type1)
+    logger.debug("received type : %s",type1)
     match type1:
         case b'blob' : c = GitBlob
         case b'commit' : c = GitCommit
@@ -99,6 +103,6 @@ def cmd_hash_object(args):
         repo = repo_find()
     
     with open(args.path, 'rb') as f:
-        print("Type is : ",args.type)
+        logger.debug("Type is : %s",args.type)
         hash = object_hash(f, args.type.encode(), repo)
         print(hash)
