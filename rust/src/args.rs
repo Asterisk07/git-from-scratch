@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use crate::init::cmd_init;
 use crate::object::ObjectType;
 
 #[derive(Parser)]
@@ -10,6 +11,11 @@ use crate::object::ObjectType;
 
 #[derive(Subcommand)]
  enum Commands {
+    Init{
+        #[arg(default_value = ".")]
+        path: String
+    }
+    ,
     /// Provide content of repository objects
     CatFile {
         /// Specify the type
@@ -39,6 +45,7 @@ pub fn parse() {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Init { path } => cmd_init(path),
         Commands::CatFile { object_type, object } => {
             println!("Reading {:?} object {}", object_type, object);
             // call your cmd_cat_file(object_type, object) here
