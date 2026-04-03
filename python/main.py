@@ -3,6 +3,7 @@ import logging
 from args import create_parser
 from init import cmd_init
 from object import cmd_cat_file, cmd_hash_object
+from commit import cmd_log
 
 def main(argv=sys.argv[1:]):
 

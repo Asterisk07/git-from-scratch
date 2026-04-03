@@ -38,6 +38,8 @@ def repo_file(repo, *path, mkdir = False):
     # create path upto the file
     logger.debug("found repo at : %s", repo.gitdir)
     logger.debug("received args: %s", path)
+    # if len(path) == 2 and (path[0] + path[1] == "HEAD"):
+        # path
     if len(path) == 1 or repo_dir(repo, *path[:-1], mkdir = mkdir):
         return repo_path(repo, *path)
 
@@ -51,7 +53,10 @@ def repo_dir(repo, *path, mkdir = False):
             return path1
         else:
             raise Exception("ERROR Not a directory")
-    
+    else:
+        # print(path1)
+        raise Index
+
     if mkdir == True:
         os.makedirs(path1)
         return path1
