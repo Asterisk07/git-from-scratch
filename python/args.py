@@ -70,5 +70,7 @@ def create_parser():
     argsp.add_argument("path",
                     help="The EMPTY directory to checkout on.")
 
+    argsp = add_command("show-ref", help="List references.")
+
     return main_parser
 
