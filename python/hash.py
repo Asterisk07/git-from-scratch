@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def object_read(repo, hash):
+def object_read(repo, hash) -> GitObject:
     logger.debug("searching at : %s and %s", hash[:2], hash[2:])
     path = repo_file(repo,"objects", hash[:2], hash[2:])
     logger.debug("im the path : %s",path)
@@ -68,7 +68,7 @@ def object_write(obj, repo):
             f.write(zlib.compress(content))
     return hash
 
-def object_find(repo, name, fmt=None, follow=True):
+def object_find(repo, name, fmt=None, follow=True) -> str:
     return name
 
 def cat_file(repo, obj, fmt=None):

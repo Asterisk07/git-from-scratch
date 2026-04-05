@@ -4,7 +4,7 @@ from args import create_parser
 from init import cmd_init
 from hash import cmd_cat_file, cmd_hash_object
 from log import cmd_log
-from checkout import cmd_ls_tree
+from checkout import cmd_ls_tree, cmd_checkout
 
 def main(argv=sys.argv[1:]):
 

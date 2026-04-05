@@ -4,7 +4,7 @@ class GitTree(GitObject):
     fmt = b'tree'
 
     def init(self):
-        self.data = list
+        self.data = list()
 
     def dump(self):
         return dump_tree(self.data)
