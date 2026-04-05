@@ -5,7 +5,7 @@ from init import cmd_init
 from hash import cmd_cat_file, cmd_hash_object
 from log import cmd_log
 from checkout import cmd_ls_tree, cmd_checkout
-from ref import cmd_show_ref
+from ref import cmd_show_ref, cmd_tag
 
 def main(argv=sys.argv[1:]):
 

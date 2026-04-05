@@ -19,6 +19,9 @@ class GitCommit(GitObject):
         # print("-"*10)
         self.data = val
 
+class GitTag(GitCommit):
+    fmt = b'tag'
+
 
 def read_metadata(text):
     data = {}
@@ -63,10 +66,15 @@ def write_metadata(data):
     NEWLINE = b'\n'
 
     for key in data:
+        print(key)
         if key is None:
             continue
         val_list = data[key]
+        if type(val_list) != list:
+            val_list = [val_list]
+        # else:
         for val in val_list:
             text += key + SPACE + val.replace(NEWLINE, NEWLINE + SPACE).rstrip(SPACE)
     text += NEWLINE + data[None]
+
     return text
