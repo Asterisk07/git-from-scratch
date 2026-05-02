@@ -87,6 +87,18 @@ def create_parser():
                     default="HEAD",
                     nargs="?",
                     help="The object the new tag will point to")
+    
+    argsp = add_command("rev-parse", help="Parse revision (or other objects) identifiers")
+
+    argsp.add_argument("--type",
+                    metavar="type",
+                    dest="type",
+                    choices=["blob", "commit", "tag", "tree"],
+                    default=None,
+                    help="Specify the expected type")
+
+    argsp.add_argument("name",
+                    help="The name to parse")
 
     return main_parser
 

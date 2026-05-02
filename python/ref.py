@@ -132,7 +132,7 @@ def object_resolve(repo, name):
     if HASH_REGEX.match(name):
         # raise IndentationError
         logger.debug(f'name is hash : "{name}"')
-        name = name.rstrip()
+        name = name.rstrip('\n')
 
         hash = name.lower()
         prefix = hash[:2]
@@ -192,7 +192,7 @@ def object_find(repo, name, fmt=None, follow=True) -> str:
         if obj.fmt == b'tag':
             hash = obj.data[b'object'].decode('ascii')
         elif obj.fmt == b'commit':
-            hash = obj.data[b'tree'][-1].decode('ascii')
+            hash = obj.data[b'tree'][-1].decode('ascii').rstrip('\n')
         else:
             logger.debug(f'Invalid fmt {obj.fmt}, returning None hash instead of {hash} for name : {name}')
 
@@ -203,3 +203,13 @@ def object_find(repo, name, fmt=None, follow=True) -> str:
 
     # if len(sha) > 1:
     return name
+
+def cmd_rev_parse(args):
+    if args.type:
+        fmt = args.type.encode()
+    else:
+        fmt = None
+
+    repo = repo_find()
+
+    print (object_find(repo, args.name, fmt, follow=True))
