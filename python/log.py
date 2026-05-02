@@ -1,6 +1,8 @@
 from init import repo_file, repo_find
-from hash import object_find, object_read
+from hash import object_read
 import logging
+
+from ref import object_find
 logger = logging.getLogger(__name__)
 
 LOG_GRAPH = ''

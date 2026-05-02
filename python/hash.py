@@ -1,11 +1,9 @@
 from models import *
 
 import hashlib
-import os
 import zlib 
 
 from init import repo_file, repo_find
-from utils import cat
 
 import logging
 logger = logging.getLogger(__name__)
@@ -67,18 +65,6 @@ def object_write(obj, repo):
         with open(path,'wb') as f:
             f.write(zlib.compress(content))
     return hash
-
-def object_find(repo, name, fmt=None, follow=True) -> str:
-    return name
-
-def cat_file(repo, obj, fmt=None):
-    obj = object_read(repo, object_find(repo, obj, fmt=fmt))
-    cat(obj.dump())
-
-def cmd_cat_file(args):
-    repo = repo_find()
-    logger.debug("found repo at : %s",repo.gitdir)
-    cat_file(repo, args.object, fmt=args.type.encode())
 
 def object_hash(f, type1, repo = None):
     data = f.read()

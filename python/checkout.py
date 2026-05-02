@@ -1,8 +1,9 @@
 import os
 
-from hash import object_find, object_read
+from hash import object_read
 from init import repo_find
 
+from ref import object_find
 from utils import silent
 import logging
 logger = logging.getLogger(__name__)

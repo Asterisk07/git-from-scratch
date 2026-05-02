@@ -1,6 +1,7 @@
 from init import repo_file, repo_find, repo_dir
-from hash import object_find, object_read, object_write
+from hash import object_read, object_write
 import os
+import re
 
 from utils import silent
 import logging
@@ -70,6 +71,8 @@ def ref_create(repo, ref, hash):
     with open(repo_file(repo, 'refs/'+ref), 'w') as f:
         f.write(hash + '\n')
 
+
+
 def tag_create(repo, tag_name, ref, create_tag_object = False):
     hash = object_find(repo, ref)
     
@@ -102,3 +105,94 @@ def cmd_tag(args):
     else:
         refs = ref_list(repo)
         show_ref(ref_list, refs['tags'], with_hash = False)
+
+HASH_REGEX = re.compile('^[0-9A-Fa-f]{4,40}$')
+def object_resolve(repo, name):
+    """Resolve name to an object hash in repo.
+
+    This function is aware of:
+
+    - the HEAD literal
+    - short and long hashes
+    - tags
+    - branches
+    - remote branches"""
+
+
+    if not name.strip():
+        return None
+
+
+    if name == 'HEAD':
+        return [ref_resolve(repo, name)]
+
+    candidates = []
+
+
+    if HASH_REGEX.match(name):
+        logger.debug(f'name is hash')
+
+        hash = name.lower()
+        prefix = hash[:2]
+        dir_path = repo_dir(repo,"objects", prefix, mkdir = False)
+
+        if dir_path:
+            logger.debug(f'dir match hash')
+
+            rest_hash = hash[2:]
+            for f in os.listdir(dir_path):
+
+                if f.startswith(rest_hash):
+                    logger.debug(f'obj match hash')
+
+                    candidates.append(prefix + f)
+    else:
+        logger.debug(f'name {name} not match hash {HASH_REGEX}')
+
+
+    for subfolder in ('tags','heads','remotes'):
+        hash = ref_resolve(repo, f'refs/{subfolder}/{name}')
+        if hash:
+            candidates.append(hash)
+    return candidates
+
+def object_find(repo, name, fmt=None, follow=True) -> str:
+    hash = object_resolve(repo, name)
+    # raise Inde
+    logger.debug(f'resolved obj, got hash : {hash} for name : {name}')
+
+    if not hash:
+        raise Exception(f"No such reference {name}.")
+    elif len(hash) > 1:
+        raise Exception(f"Ambiguous reference {name}: Candidates are:\n - {'\n - '.join(hash)}.")
+    else:
+        hash = hash[0]
+
+    if fmt is None:
+        return hash
+    
+    while True:
+        obj = object_read(repo, hash)
+        if obj.fmt == fmt:
+            assert(hash is not None)
+            return hash
+        
+        if not follow:
+            assert(None is not None)
+
+            return None
+        
+        if obj.fmt == b'tag':
+            hash = obj.data[b'object'].decode('ascii')
+        elif obj.fmt == b'commit':
+            hash = obj.data[b'tree'][-1].decode('ascii')
+        else:
+            logger.debug(f'Invalid fmt {obj.fmt}, returning None hash instead of {hash} for name : {name}')
+
+            # assert(None is not None)
+
+            return None
+
+
+    # if len(sha) > 1:
+    return name

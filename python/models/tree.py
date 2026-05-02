@@ -7,7 +7,7 @@ class GitTree(GitObject):
         self.data = list()
 
     def dump(self):
-        return dump_tree(self.data)
+        return dump_tree(self)
     
     def load(self,data):
         self.data = load_tree(data)
@@ -70,6 +70,7 @@ def dump_tree_helper(leaf):
         return leaf.path
 
 def dump_tree(tree):
+    print("tree dump : ",type(tree))
     tree.data.sort(key = dump_tree_helper)
     text = b''
     for i in tree.data:
