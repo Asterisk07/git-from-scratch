@@ -25,7 +25,7 @@ def ref_resolve(repo, ref):
         data = f.read().rstrip('\n')
 
     if data.startswith(REF_PREFIX):
-        return ref_resolve(repo, data.lstrip(REF_PREFIX))
+        return ref_resolve(repo, data.removeprefix(REF_PREFIX))
     else:
         return data
 
@@ -130,7 +130,9 @@ def object_resolve(repo, name):
 
 
     if HASH_REGEX.match(name):
-        logger.debug(f'name is hash')
+        # raise IndentationError
+        logger.debug(f'name is hash : "{name}"')
+        name = name.rstrip()
 
         hash = name.lower()
         prefix = hash[:2]
@@ -146,8 +148,12 @@ def object_resolve(repo, name):
                     logger.debug(f'obj match hash')
 
                     candidates.append(prefix + f)
+        else:
+            logger.debug(f'dir not match hash')
+
     else:
         logger.debug(f'name {name} not match hash {HASH_REGEX}')
+        # raise ZeroDivisionError
 
 
     for subfolder in ('tags','heads','remotes'):
@@ -159,7 +165,8 @@ def object_resolve(repo, name):
 def object_find(repo, name, fmt=None, follow=True) -> str:
     hash = object_resolve(repo, name)
     # raise Inde
-    logger.debug(f'resolved obj, got hash : {hash} for name : {name}')
+    logger.debug(f'resolved obj, got hash : {hash} for name : "{name}"')
+    # logger.debug(f'resolved obj, got hash : {hash} for name : {name}')
 
     if not hash:
         raise Exception(f"No such reference {name}.")

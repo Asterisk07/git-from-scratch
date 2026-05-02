@@ -13,7 +13,7 @@ def cmd_ls_tree(args):
     ls_tree(repo, args.tree, args.recursive)
 
 def ls_tree(repo, ref, recursive, prefix = ""):
-    hash = object_find(repo, ref, recursive)
+    hash = object_find(repo, ref, b'tree')
     logger.debug("found hash : %s",hash)
 
     tree = object_read(repo, hash)
