@@ -7,7 +7,7 @@ from hash import cmd_hash_object
 from log import cmd_log
 from checkout import cmd_ls_tree, cmd_checkout
 from ref import cmd_show_ref, cmd_tag, cmd_rev_parse
-from index import cmd_ls_files, cmd_check_ignore
+from index import cmd_ls_files, cmd_check_ignore, cmd_status
 
 def main(argv=sys.argv[1:]):
     # for debugging:

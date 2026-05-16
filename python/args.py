@@ -106,5 +106,7 @@ def create_parser():
     argsp = add_command("check-ignore", help = "Check path(s) against ignore rules.")
     argsp.add_argument("path", nargs="+", help="Paths to check")
     
+    argsp = add_command("status", help = "Show the working tree status.")
+
     return main_parser
 
