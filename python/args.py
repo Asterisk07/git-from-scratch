@@ -100,5 +100,11 @@ def create_parser():
     argsp.add_argument("name",
                     help="The name to parse")
 
+    argsp = add_command("ls-files", help = "List all the stage files")
+    argsp.add_argument("--verbose", action="store_true", help="Show everything.")
+
+    argsp = add_command("check-ignore", help = "Check path(s) against ignore rules.")
+    argsp.add_argument("path", nargs="+", help="Paths to check")
+    
     return main_parser
 
