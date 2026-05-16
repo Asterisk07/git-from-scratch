@@ -108,5 +108,18 @@ def create_parser():
     
     argsp = add_command("status", help = "Show the working tree status.")
 
+    argsp = add_command("rm", help="Remove files from the working tree and the index.")
+    argsp.add_argument("path", nargs="+", help="Files to remove")
+
+    argsp = add_command("add", help = "Add files contents to the index.")
+    argsp.add_argument("path", nargs="+", help="Files to add")
+
+    argsp = add_command("commit", help="Record changes to the repository.")
+
+    argsp.add_argument("-m",
+                    metavar="message",
+                    dest="message",
+                    help="Message to associate with this commit.")
+
     return main_parser
 

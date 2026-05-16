@@ -8,14 +8,9 @@ from log import cmd_log
 from checkout import cmd_ls_tree, cmd_checkout
 from ref import cmd_show_ref, cmd_tag, cmd_rev_parse
 from index import cmd_ls_files, cmd_check_ignore, cmd_status
+from commit import cmd_add, cmd_rm, cmd_commit
 
 def main(argv=sys.argv[1:]):
-    # for debugging:
-    # text = '''
-    # git check-ignore python/log.pdf -d
-    # '''
-    # argv = text.strip().split(' ')[1:]
-    # ['check-ignore', 'log.pdf', '-d']
 
     # If no arguments, or first argument is "help", show help
     if len(argv)==0 or argv[0] == "help":
