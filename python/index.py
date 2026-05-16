@@ -316,10 +316,16 @@ def cmd_status_index_worktree(repo, index):
     # We now traverse the index, and compare real files with the cached
     # versions.
 
+    # 1. New set to store directories found in the index
+    tracked_dirs = set()
+
     for entry in index.entries:
         full_path = os.path.join(repo.worktree, entry.name)
 
-        # That file *name* is in the index
+        # BUILD THE DIRECTORY MAP HERE
+        parts = entry.name.split(os.path.sep)
+        for i in range(1, len(parts)):
+            tracked_dirs.add(os.path.sep.join(parts[:i]))
 
         if not os.path.exists(full_path):
             print("  deleted: ", entry.name)
@@ -346,10 +352,27 @@ def cmd_status_index_worktree(repo, index):
     print()
     print("Untracked files:")
 
-    for f in all_files:
-        # @TODO If a full directory is untracked, we should display
-        # its name without its contents.
-        if not check_ignore(ignore, f):
+    # --- THE TODO SECTION ---
+    displayed = set()
+
+    for f in sorted(all_files):
+        if check_ignore(ignore, f):
+            continue
+
+        parts = f.split(os.path.sep)
+        is_grouped = False
+        
+        # Check if any parent of this untracked file is UNTRACKED
+        for i in range(1, len(parts)):
+            parent = os.path.sep.join(parts[:i])
+            if parent not in tracked_dirs:
+                if parent not in displayed:
+                    print(f"  {parent}{os.path.sep}")
+                    displayed.add(parent)
+                is_grouped = True
+                break
+        
+        if not is_grouped:
             print(" ", f)
 
 def cmd_status(_):
