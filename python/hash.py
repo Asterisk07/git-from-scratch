@@ -5,6 +5,8 @@ import zlib
 
 from init import repo_file, repo_find
 
+import os
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -62,8 +64,9 @@ def object_write(obj, repo):
     if repo:
         path = repo_file(repo,"objects", hash[:2], hash[2:], mkdir = True)
 
-        with open(path,'wb') as f:
-            f.write(zlib.compress(content))
+        if not os.path.exists(path):
+            with open(path,'wb') as f:
+                f.write(zlib.compress(content))
     return hash
 
 def object_hash(f, type1, repo = None):
