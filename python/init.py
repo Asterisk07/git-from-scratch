@@ -53,13 +53,13 @@ def repo_dir(repo, *path, mkdir = False):
             return path1
         else:
             raise Exception("ERROR Not a directory")
-    else:
-        # print(path1)
-        raise Index
 
     if mkdir == True:
         os.makedirs(path1)
         return path1
+    else:
+        return None
+        # raise Exception(f"ERROR path does not exist {path1}")
 
 def repo_create(path):
     # create a new repo at this path

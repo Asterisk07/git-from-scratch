@@ -46,4 +46,6 @@ def main(argv=sys.argv[1:]):
         case "tag"          : cmd_tag(args)
         case _              : print("Bad command.")
 
-
+if __name__ == '__main__':
+    argv = ['status']
+    main(argv)

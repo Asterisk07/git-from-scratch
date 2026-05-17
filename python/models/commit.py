@@ -74,7 +74,11 @@ def write_metadata(data):
             val_list = [val_list]
         # else:
         for val in val_list:
-            text += key + SPACE + val.replace(NEWLINE, NEWLINE + SPACE).rstrip(SPACE)
+            if NEWLINE in val:
+                val = val.replace(NEWLINE, NEWLINE + SPACE).rstrip(SPACE)
+            else:
+                val = val + NEWLINE
+            text += key + SPACE + val
     text += NEWLINE + data[None]
 
     return text

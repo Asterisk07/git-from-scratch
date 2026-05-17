@@ -7,6 +7,7 @@ from hash import object_read, object_hash, object_write
 from ref import object_find
 from fnmatch import fnmatch
 from index import index_read, index_write, branch_get_active
+from utils import gitconfig_user_get, gitconfig_read
 
 import logging
 logger = logging.getLogger(__name__)
@@ -151,7 +152,7 @@ def tree_from_index(repo, index):
                 leaf_mode = f"{entry.mode_type:02o}{entry.mode_perms:04o}".encode("ascii")
                 leaf = GitTreeLeaf(mode = leaf_mode, path=os.path.basename(entry.name), hash=entry.sha)
             else: # Tree.  We've stored it as a pair: (basename, SHA)
-                leaf = GitTreeLeaf(mode = b"040000", path=entry[0], sha=entry[1])
+                leaf = GitTreeLeaf(mode = b"040000", path=entry[0], hash=entry[1])
 
             tree.data.append(leaf)
 
@@ -181,7 +182,7 @@ def commit_create(repo, tree, parent, author, timestamp, message):
     minutes = (offset % 3600) // 60
     tz = "{}{:02}{:02}".format("+" if offset > 0 else "-", hours, minutes)
 
-    author = author + " " + int(timestamp.timestamp()) + " " + tz
+    author = author + " " + str(int(timestamp.timestamp())) + " " + tz
 
     commit.data[b"author"] = author.encode("utf8")
     commit.data[b"committer"] = author.encode("utf8")
@@ -209,7 +210,7 @@ def cmd_commit(args):
                            tree,
                            object_find(repo, "HEAD"),
                            gitconfig_user_get(gitconfig_read()),
-                           datetime.now(),
+                           datetime.datetime.now(),
                            args.message)
 
     # Update HEAD so our commit is now the tip of the active branch.
