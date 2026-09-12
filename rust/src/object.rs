@@ -8,4 +8,3 @@ pub enum ObjectType {
     Tag,
     Tree,
 }
-
