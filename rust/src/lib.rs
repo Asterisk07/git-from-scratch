@@ -21,7 +21,7 @@ use args::{parse};
 //     // println!("    check-ignore  Check ignored files");
 // }
 
-fn main() {
+fn run() {
     parse();
     // let cli = Cli::parse();
     // match cli.command {
