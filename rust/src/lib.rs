@@ -3,7 +3,7 @@
 
 pub mod args;
 pub mod init;
-pub mod object;
+pub mod models;
 
 use args::parse;
 
