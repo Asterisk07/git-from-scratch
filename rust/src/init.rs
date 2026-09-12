@@ -1,8 +1,8 @@
+use configparser::ini::Ini;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use configparser::ini::Ini;
 
 struct Repository {
     worktree: PathBuf,
@@ -129,7 +129,7 @@ fn repo_find(path: PathBuf) {
     return repo_find(path);
 }
 
-pub fn cmd_init(path : String) {
+pub fn cmd_init(path: String) {
     // let path = match args.len() {
     //     2 => ".",      // git init
     //     3 => &args[2], // git init dir
