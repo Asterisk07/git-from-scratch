@@ -1,5 +1,7 @@
 pub type ByteString = Vec<u8>;
 pub type ByteSlice<'a> = &'a [u8];
+pub type HashString = String;
+pub type HashSlice<'a> = &'a str;
 use crate::models::blob::Blob;
 pub use memchr::memchr as byte_find;
 
@@ -22,6 +24,12 @@ pub trait GitObjectTrait {
 
 pub enum GitObject {
     Blob(Blob),
+}
+
+impl GitObject {
+    pub fn new(data: Option<ByteString>) -> Self {
+        Self::Blob(Blob::new(data))
+    }
 }
 
 macro_rules! implement_git_dispatch {
