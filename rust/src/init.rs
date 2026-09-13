@@ -7,12 +7,12 @@ pub fn cmd_init(path: String) {
     //     _ => panic!("error: too many arguments for `init`"),
     // };
     println!("creating repo at  {:?}", path);
-    // repo_find(
+    // find(
     //     PathBuf::from(path)
     //         .canonicalize()
     //         .expect(&format!("Could not canocialise {:?}", path)),
     // )
     let path = &path;
-    Repository::repo_create(path);
+    Repository::create(path);
     println!("created repo at");
 }

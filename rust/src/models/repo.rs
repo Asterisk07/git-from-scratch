@@ -39,17 +39,17 @@ impl Repository {
         }
     }
 
-    fn repo_path(&self, path: &str) -> PathBuf {
+    fn path(&self, path: &str) -> PathBuf {
         // """Compute path under repo's gitdir."""
         self.gitdir.join(path)
     }
 
-    fn repo_file(&self, path: &str, mkdir: bool) -> PathBuf {
+    fn file(&self, path: &str, mkdir: bool) -> PathBuf {
         // """Compute path under repo's gitdir."""
         self.gitdir.join(path)
     }
 
-    pub fn repo_create(path: &str) -> Self {
+    pub fn create(path: &str) -> Self {
         let repo = Self::new(path, true);
         let path = &repo.worktree;
 
@@ -101,12 +101,12 @@ impl Repository {
         //     "ref : refs/heads/mastere"
         // )
         // .unwrap();
-        let con = Self::repo_default_config();
+        let con = Self::default_config();
         con.write(&repo.config_path).unwrap();
         repo
     }
 
-    fn repo_default_config() -> Ini {
+    fn default_config() -> Ini {
         let mut con = Ini::new();
         con.set("core", "repositoryformatversion", Some("0".to_string()));
         con.set("core", "filemode", Some("false".to_string()));
@@ -114,7 +114,7 @@ impl Repository {
         con
     }
 
-    pub fn repo_find(path: PathBuf) {
+    pub fn find(path: PathBuf) {
         // need canocical path
         let x = path.join(".git");
         if x.is_dir() {
@@ -125,6 +125,6 @@ impl Repository {
             .parent()
             .expect(&format!("No git repo found at {:?}", path))
             .to_path_buf();
-        return Self::repo_find(path);
+        return Self::find(path);
     }
 }
