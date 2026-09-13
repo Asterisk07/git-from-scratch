@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 pub mod args;
+pub mod commands;
 pub mod init;
 pub mod models;
 

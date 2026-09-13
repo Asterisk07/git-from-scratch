@@ -39,12 +39,12 @@ impl Repository {
         }
     }
 
-    fn path(&self, path: &str) -> PathBuf {
+    pub fn path(&self, path: &str) -> PathBuf {
         // """Compute path under repo's gitdir."""
         self.gitdir.join(path)
     }
 
-    fn file(&self, path: &str, mkdir: bool) -> PathBuf {
+    pub fn file(&self, path: &str, mkdir: bool) -> PathBuf {
         // """Compute path under repo's gitdir."""
         self.gitdir.join(path)
     }
