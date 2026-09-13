@@ -1,14 +1,18 @@
 use crate::models::blob::Blob;
-use crate::models::object::{ByteString, GitObject, GitObjectTrait, byte_find};
+use crate::models::object::{
+    ByteString, GitObject, GitObjectTrait, HashSlice, HashString, byte_find,
+};
 use crate::models::repo::Repository;
 use flate2::read::ZlibDecoder;
 use std::fs::File;
 use std::io::Read;
 // use std::path::PathBuf;
 // use crate::models::object::GitObject;
+use hex;
+use sha1::{Digest, Sha1};
 use std::str::from_utf8;
 
-pub fn object_read(repo: &Repository, hash: &str) -> GitObject {
+pub fn object_read(repo: &Repository, hash: HashSlice) -> GitObject {
     let objdir = &hash[..2];
     let objfile = &hash[2..];
     let path = repo.path("objects").join(objdir).join(objfile);
@@ -39,4 +43,20 @@ pub fn object_read(repo: &Repository, hash: &str) -> GitObject {
         b"blob" => GitObject::Blob(Blob::new(Some(raw))),
         _ => panic!("Unsupported TYPE {:?}", &type_tag[..]),
     }
+}
+
+pub fn hash(obj: GitObject) -> HashString {
+    let type_tag = obj.get_type();
+    let data = obj.dump();
+    let mut raw = ByteString::new();
+    raw.extend_from_slice(type_tag.as_bytes());
+    raw.push(b' ');
+    raw.extend_from_slice(data.len().to_string().as_bytes());
+    raw.push(b'\x00');
+    raw.extend_from_slice(&data);
+    let mut hash = Sha1::new();
+    hash.update(raw);
+    let hash = hash.finalize();
+    let hash = hex::encode(hash);
+    hash
 }

@@ -1,7 +1,7 @@
 use flate2::Compression;
 use flate2::write::ZlibEncoder;
-use rustgit::commands::hash::object_read;
-use rustgit::models::object::GitObjectTrait;
+use rustgit::commands::hash::{hash, object_read};
+use rustgit::models::object::{GitObject, GitObjectTrait};
 use rustgit::models::repo::Repository;
 use std::fs::{create_dir_all, write};
 use std::io::Write;
@@ -56,4 +56,16 @@ fn test_object_read_panics_on_missing_hash() {
 
     // Call a random hash that has no matching compressed file written on disk
     object_read(&repo, "00112233445566778899aabbccddeeff00112233");
+}
+
+#[test]
+fn test_hash_capability_matches_real_git_sha1() {
+    let file_content = b"hello\n".to_vec();
+
+    let mock_blob = GitObject::new(Some(file_content));
+
+    let generated_hash = hash(mock_blob);
+
+    let expected_git_hash = "ce013625030ba8dba906f756967f9e9ca394464a";
+    assert_eq!(generated_hash, expected_git_hash);
 }
