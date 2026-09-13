@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-struct Repository {
+pub struct Repository {
     worktree: PathBuf,
     gitdir: PathBuf,
     config_path: PathBuf,
@@ -49,7 +49,7 @@ impl Repository {
         self.gitdir.join(path)
     }
 
-    fn repo_create(path: &str) -> Self {
+    pub fn repo_create(path: &str) -> Self {
         let repo = Self::new(path, true);
         let path = &repo.worktree;
 
@@ -114,7 +114,7 @@ impl Repository {
         con
     }
 
-    fn repo_find(path: PathBuf) {
+    pub fn repo_find(path: PathBuf) {
         // need canocical path
         let x = path.join(".git");
         if x.is_dir() {
@@ -127,21 +127,4 @@ impl Repository {
             .to_path_buf();
         return Self::repo_find(path);
     }
-}
-
-pub fn cmd_init(path: String) {
-    // let path = match args.len() {
-    //     2 => ".",      // git init
-    //     3 => &args[2], // git init dir
-    //     _ => panic!("error: too many arguments for `init`"),
-    // };
-    println!("creating repo at  {:?}", path);
-    // repo_find(
-    //     PathBuf::from(path)
-    //         .canonicalize()
-    //         .expect(&format!("Could not canocialise {:?}", path)),
-    // )
-    let path = &path;
-    Repository::repo_create(path);
-    println!("created repo at");
 }
