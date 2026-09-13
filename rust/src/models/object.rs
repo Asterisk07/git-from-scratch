@@ -7,6 +7,17 @@ pub trait GitObjectTrait {
     fn get_type(&self) -> &'static str;
     fn dump(&self) -> ByteString;
     fn load(&mut self, data: ByteString);
+    fn new(data: Option<ByteString>) -> Self
+    where
+        Self: Sized + Default,
+    {
+        let mut obj = Self::default();
+        match data {
+            Some(d) => obj.load(d),
+            _ => obj.load(vec![]),
+        };
+        obj
+    }
 }
 
 pub enum GitObject {

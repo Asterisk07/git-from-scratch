@@ -1,4 +1,6 @@
 use crate::models::object::{ByteString, GitObjectTrait};
+
+#[derive(Default)]
 pub struct Blob {
     data: ByteString,
 }
