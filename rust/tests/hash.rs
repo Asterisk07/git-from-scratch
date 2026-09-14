@@ -1,6 +1,6 @@
 use flate2::Compression;
 use flate2::write::ZlibEncoder;
-use rustgit::commands::hash::{hash, object_read};
+use rustgit::commands::hash::{object_hash, object_read};
 use rustgit::models::object::{GitObject, GitObjectTrait};
 use rustgit::models::repo::Repository;
 use std::fs::{create_dir_all, write};
@@ -64,7 +64,7 @@ fn test_hash_capability_matches_real_git_sha1() {
 
     let mock_blob = GitObject::new(Some(file_content));
 
-    let generated_hash = hash(mock_blob);
+    let generated_hash = object_hash(&mock_blob);
 
     let expected_git_hash = "ce013625030ba8dba906f756967f9e9ca394464a";
     assert_eq!(generated_hash, expected_git_hash);

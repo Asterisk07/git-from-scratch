@@ -1,6 +1,6 @@
 use crate::models::blob::Blob;
 use crate::models::object::{
-    ByteString, GitObject, GitObjectTrait, HashSlice, HashString, byte_find,
+    ByteSlice, ByteString, GitObject, GitObjectTrait, HashSlice, HashString, byte_find,
 };
 use crate::models::repo::Repository;
 use flate2::read::ZlibDecoder;
@@ -13,9 +13,7 @@ use sha1::{Digest, Sha1};
 use std::str::from_utf8;
 
 pub fn object_read(repo: &Repository, hash: HashSlice) -> GitObject {
-    let objdir = &hash[..2];
-    let objfile = &hash[2..];
-    let path = repo.path("objects").join(objdir).join(objfile);
+    let path = repo.hash_path(&hash);
     if !path.try_exists().expect("Failed to read filesystem") {
         panic!("Required file does not exist: {:?}", path);
     }
@@ -45,7 +43,15 @@ pub fn object_read(repo: &Repository, hash: HashSlice) -> GitObject {
     }
 }
 
-pub fn hash(obj: GitObject) -> HashString {
+fn hash(raw: ByteSlice) -> HashString {
+    let mut hash = Sha1::new();
+    hash.update(raw);
+    let hash = hash.finalize();
+    let hash = hex::encode(hash);
+    hash
+}
+
+fn object_encode(obj: &GitObject) -> ByteString {
     let type_tag = obj.get_type();
     let data = obj.dump();
     let mut raw = ByteString::new();
@@ -54,9 +60,18 @@ pub fn hash(obj: GitObject) -> HashString {
     raw.extend_from_slice(data.len().to_string().as_bytes());
     raw.push(b'\x00');
     raw.extend_from_slice(&data);
-    let mut hash = Sha1::new();
-    hash.update(raw);
-    let hash = hash.finalize();
-    let hash = hex::encode(hash);
+    raw
+}
+
+pub fn object_hash(obj: &GitObject) -> HashString {
+    let raw = object_encode(&obj);
+    let hash = hash(&raw);
+    hash
+}
+
+pub fn object_write(repo: &Repository, obj: &GitObject) -> HashString {
+    let hash = object_hash(&obj);
+    let path = repo.hash_path(&hash);
+    todo!(); //write to file logic
     hash
 }

@@ -4,6 +4,8 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
+use crate::models::object::HashSlice;
+
 pub struct Repository {
     worktree: PathBuf,
     gitdir: PathBuf,
@@ -37,6 +39,13 @@ impl Repository {
             config_path: config_path,
             config: config,
         }
+    }
+
+    pub fn hash_path(&self, hash: HashSlice) -> PathBuf {
+        let objdir = &hash[..2];
+        let objfile = &hash[2..];
+        let path = self.path("objects").join(objdir).join(objfile);
+        path
     }
 
     pub fn path(&self, path: &str) -> PathBuf {
