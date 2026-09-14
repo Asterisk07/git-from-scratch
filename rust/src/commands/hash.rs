@@ -53,7 +53,7 @@ fn hash(raw: ByteSlice) -> HashString {
     hash
 }
 
-fn object_encode(obj: &GitObject) -> ByteString {
+pub fn object_encode(obj: &GitObject) -> ByteString {
     let type_tag = obj.get_type();
     let data = obj.dump();
     let mut raw = ByteString::new();

@@ -1,10 +1,13 @@
 use flate2::Compression;
+use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
-use rustgit::commands::hash::{object_hash, object_read};
+use rustgit::commands::hash::{object_encode, object_hash, object_read, object_write};
 use rustgit::models::object::{GitObject, GitObjectTrait};
 use rustgit::models::repo::Repository;
 use std::fs::{create_dir_all, write};
-use std::io::Write;
+use std::io::{Read, Write};
+use std::path::PathBuf;
+
 use tempfile::tempdir;
 
 #[test]
@@ -68,4 +71,162 @@ fn test_hash_capability_matches_real_git_sha1() {
 
     let expected_git_hash = "ce013625030ba8dba906f756967f9e9ca394464a";
     assert_eq!(generated_hash, expected_git_hash);
+}
+
+#[test]
+fn test_object_write_capability_matches_real_git_sha1_local_dir() {
+    // 1. Set up a fixed local folder inside your project's target directory
+    let repo_path = PathBuf::from("target/debug_matches_sha1");
+
+    // Clean up any old test run data so you always inspect a fresh state
+    if repo_path.exists() {
+        std::fs::remove_dir_all(&repo_path).unwrap();
+    }
+    std::fs::create_dir_all(&repo_path).unwrap();
+
+    let repo_str = repo_path.to_str().unwrap();
+    let repo = Repository::create(repo_str);
+
+    // 2. Draft raw Git object content matching your exact "hello\n" reference
+    let file_content = b"hello\n".to_vec();
+    let mock_blob = GitObject::new(Some(file_content));
+
+    // 3. Execute object_write to encode, hash, and compress it to disk
+    let generated_hash = object_write(&repo, &mock_blob);
+
+    // Verify it generates the exact Git SHA1 signature for "hello\n"
+    let expected_git_hash = "ce013625030ba8dba906f756967f9e9ca394464a";
+    assert_eq!(generated_hash, expected_git_hash);
+
+    // 4. Verify the folder structure creation and file existence
+    let objdir = &generated_hash[..2]; // "ce"
+    let objfile = &generated_hash[2..]; // "013625030b..."
+    let expected_file_path = repo.path("objects").join(objdir).join(objfile);
+
+    println!("Expected file path {:?}", expected_file_path);
+    assert!(
+        expected_file_path.exists(),
+        "Object was not written to the expected disk path"
+    );
+
+    // 5. Read back the zlib compressed payload to verify data integrity
+    let compressed_data = std::fs::read(&expected_file_path).unwrap();
+    let mut decoder = ZlibDecoder::new(&compressed_data[..]);
+    let mut decompressed_data = Vec::new();
+    decoder.read_to_end(&mut decompressed_data).unwrap();
+
+    // Verify that the file's data perfectly matches your internal encoder output
+    let expected_encoded_data = object_encode(&mock_blob);
+    assert_eq!(decompressed_data, expected_encoded_data);
+}
+
+#[test]
+fn test_object_write_capability_matches_real_git_sha1() {
+    // 1. Set up a mock repo sandbox using your initialization hook
+    let dir = tempdir().unwrap();
+    let repo_path = dir.path().join("mock_repo");
+    let repo_str = repo_path.to_str().unwrap();
+    let repo = Repository::create(repo_str);
+
+    // 2. Draft raw Git object content matching your exact "hello\n" reference
+    let file_content = b"hello\n".to_vec();
+    let mock_blob = GitObject::new(Some(file_content));
+
+    // 3. Execute object_write to encode, hash, and compress it to disk
+    let generated_hash = object_write(&repo, &mock_blob);
+
+    // Verify it generates the exact Git SHA1 signature for "hello\n"
+    let expected_git_hash = "ce013625030ba8dba906f756967f9e9ca394464a";
+    assert_eq!(generated_hash, expected_git_hash);
+
+    // 4. Verify the folder structure creation and file existence
+    let objdir = &generated_hash[..2]; // "ce"
+    let objfile = &generated_hash[2..]; // "013625030b..."
+    let expected_file_path = repo.path("objects").join(objdir).join(objfile);
+
+    assert!(
+        expected_file_path.exists(),
+        "Object was not written to the expected disk path"
+    );
+
+    // 5. Read back the zlib compressed payload to verify data integrity
+    let compressed_data = std::fs::read(&expected_file_path).unwrap();
+    let mut decoder = ZlibDecoder::new(&compressed_data[..]);
+    let mut decompressed_data = Vec::new();
+    decoder.read_to_end(&mut decompressed_data).unwrap();
+
+    // Verify that the file's data perfectly matches your internal encoder output
+    let expected_encoded_data = object_encode(&mock_blob);
+    assert_eq!(decompressed_data, expected_encoded_data);
+}
+
+#[test]
+
+fn test_object_write_is_readable_by_real_git_cli_local_dir() {
+    // 1. Set up a fixed local folder inside your project's target directory
+    let repo_path = PathBuf::from("target/debug_git_test");
+
+    // Clean up any old test run data so you always start fresh
+    if repo_path.exists() {
+        std::fs::remove_dir_all(&repo_path).unwrap();
+    }
+    std::fs::create_dir_all(&repo_path).unwrap();
+
+    // FIRST: Let your code initialize the repository layout
+    let repo_str = repo_path.to_str().unwrap();
+    let repo = Repository::create(repo_str);
+
+    // SECOND: Fix the missing HEAD file so the Git CLI recognizes the repo
+    let git_dir = repo_path.join(".git");
+    std::fs::create_dir_all(git_dir.join("refs/heads")).unwrap();
+    std::fs::write(git_dir.join("HEAD"), b"ref: refs/heads/main\n").unwrap();
+
+    // 2. Draft the mock object ("hello\n" matches hash ce013625...)
+    let file_content = b"hello\n".to_vec();
+    let mock_blob = GitObject::new(Some(file_content));
+
+    // 3. Execute YOUR Rust function to write the compressed file to disk
+    let generated_hash = object_write(&repo, &mock_blob).to_string();
+    // let generated_hash = object_write(&repo, &mock_blob).unwrap().to_string();
+
+    // 4. Use the REAL Git installation on your machine to query the database
+    let git_output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(&repo_path)
+        .arg("cat-file")
+        .arg("-p")
+        .arg(&generated_hash)
+        .output()
+        .expect("Failed to execute real git command");
+
+    // 5. Assertions
+    if !git_output.status.success() {
+        let expected_object_path = git_dir
+            .join("objects")
+            .join(&generated_hash[0..2])
+            .join(&generated_hash[2..]);
+
+        panic!(
+            "\n================ TEST FAILURE DETAILED REPORT ================\n\
+             Real Git rejected our object database file!\n\n\
+             [Command executed]: git -C {:?} cat-file -p {}\n\
+             [Generated Hash]:   {}\n\
+             [Git CLI Error]:    {}\n\n\
+             [Inspection Guide]:\n\
+             - Go inspect this folder: {:?}\n\
+             - Does the object file exist? {}\n\
+             - Object path checked:    {:?}\n\
+             ==============================================================",
+            repo_path,
+            generated_hash,
+            generated_hash,
+            String::from_utf8_lossy(&git_output.stderr).trim(),
+            git_dir,
+            expected_object_path.exists(),
+            expected_object_path
+        );
+    }
+
+    let git_read_string = String::from_utf8(git_output.stdout).unwrap();
+    assert_eq!(git_read_string, "hello\n");
 }
