@@ -6,6 +6,10 @@ edition = "2024"
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
 configparser = "3.1.0"
+flate2 = "1.1.10"
+hex = "0.4.3"
+memchr = "2.8.3"
+sha1 = "0.11.0"
 
 [dev-dependencies]
 tempfile = "3.27.0"

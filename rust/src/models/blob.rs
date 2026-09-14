@@ -1,10 +1,14 @@
-use crate::models::object::{ByteString, GitObject};
+use crate::models::object::{ByteString, GitObjectTrait};
+
+#[derive(Default)]
 pub struct Blob {
     data: ByteString,
 }
 
-impl GitObject for Blob {
-    const TYPE: &'static str = "blob";
+impl GitObjectTrait for Blob {
+    fn get_type(&self) -> &'static str {
+        "blob"
+    }
     fn dump(&self) -> ByteString {
         self.data.clone()
     }

@@ -2,7 +2,9 @@ use configparser::ini::Ini;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf, absolute};
+
+use crate::models::object::HashSlice;
 
 pub struct Repository {
     worktree: PathBuf,
@@ -12,8 +14,8 @@ pub struct Repository {
 }
 
 impl Repository {
-    fn new(path1: &str, force: bool) -> Self {
-        let worktree = PathBuf::from(path1);
+    fn new(worktree: impl AsRef<Path>, force: bool) -> Self {
+        let worktree = absolute(worktree.as_ref()).expect("Invalid path");
         let gitdir = worktree.join(".git");
         let config_path = gitdir.join("config");
         let mut config = Ini::new();
@@ -39,46 +41,59 @@ impl Repository {
         }
     }
 
-    fn path(&self, path: &str) -> PathBuf {
-        // """Compute path under repo's gitdir."""
+    pub fn hash_path(&self, hash: HashSlice) -> PathBuf {
+        let objdir = &hash[..2];
+        let objfile = &hash[2..];
+        let path = self.path("objects").join(objdir).join(objfile);
+        path
+    }
+
+    pub fn path(&self, path: impl AsRef<Path>) -> PathBuf {
         self.gitdir.join(path)
     }
 
-    fn file(&self, path: &str, mkdir: bool) -> PathBuf {
-        // """Compute path under repo's gitdir."""
-        self.gitdir.join(path)
+    pub fn file(&self, path: impl AsRef<Path>) -> PathBuf {
+        let path = self.path(path);
+
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).expect("Error creating parent dir")
+        };
+        path
     }
 
-    pub fn create(path: &str) -> Self {
+    pub fn create(path: impl AsRef<Path>) -> Self {
         let repo = Self::new(path, true);
         let path = &repo.worktree;
 
-        // Ok(entries.next().is_none())
         let gitpath = &repo.gitdir;
         if path.exists() {
             assert!(path.is_dir(), "Path is an existing file : {:?}", path);
-            if gitpath.exists() {
-                assert!(
-                    gitpath.is_dir(),
-                    "gitdir is an existing file : {:?}",
-                    gitpath
-                );
-                assert!(
-                    fs::read_dir(&gitpath)
-                        .expect("Error reading git dir")
-                        .next()
-                        .is_none(),
-                    "Git dir non empty : {:?}",
-                    gitpath
-                );
-            }
         } else {
             fs::create_dir(&path).expect("Failed to create worktree");
+        }
+        if gitpath.exists() {
+            assert!(
+                gitpath.is_dir(),
+                "gitdir is an existing file : {:?}",
+                gitpath
+            );
+            assert!(
+                fs::read_dir(&gitpath)
+                    .expect("Error reading git dir")
+                    .next()
+                    .is_none(),
+                "Git dir non empty : {:?}",
+                gitpath
+            );
+        } else {
             fs::create_dir(&gitpath)
                 .expect(&format!("Failed to create git directory at {:?}", gitpath));
         }
 
-        fs::create_dir(gitpath.join("branches")).unwrap();
+        fs::create_dir(gitpath.join("branches")).expect(&format!(
+            "Failed to create branches dir inside worktree: {:?}",
+            gitpath
+        ));
         fs::create_dir(gitpath.join("objects")).unwrap();
         fs::create_dir(gitpath.join("refs")).unwrap();
         fs::create_dir(gitpath.join("refs").join("tags")).unwrap();
@@ -114,17 +129,25 @@ impl Repository {
         con
     }
 
-    pub fn find(path: PathBuf) {
+    fn _find(path: &Path) -> PathBuf {
         // need canocical path
-        let x = path.join(".git");
-        if x.is_dir() {
-            return println!("found git dir at {:?}", x);
+
+        if path.join(".git").is_dir() {
+            return path.to_path_buf();
         }
-        // println!("Se at {:?}", path);
         let path = path
             .parent()
-            .expect(&format!("No git repo found at {:?}", path))
-            .to_path_buf();
-        return Self::find(path);
+            .expect(&format!("No git repo found at {:?}", path));
+        Self::_find(path)
+    }
+
+    pub fn find(path: impl AsRef<Path>) -> PathBuf {
+        let path = absolute(path.as_ref()).expect("Invalid path");
+        Self::_find(&path)
+    }
+
+    pub fn load(path: impl AsRef<Path>) -> Self {
+        let path = Self::find(path);
+        Self::new(path, false)
     }
 }
