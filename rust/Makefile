@@ -3,9 +3,15 @@ help:
 
 # Create git wrapper
 setup:
-	cargo check
+	@cargo check
 	@chmod +x env/git
 	@chmod +x env/make
+
+check:
+	@cargo check
+
+test: setup
+	@cargo test
 
 # Run in subshell with override
 run: setup
