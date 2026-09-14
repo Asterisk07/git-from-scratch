@@ -1,12 +1,15 @@
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
-use rustgit::commands::hash::{object_encode, object_hash, object_read, object_write};
-use rustgit::models::object::{GitObject, GitObjectTrait};
+use rustgit::commands::hash::{
+    cmd_cat_file, object_encode, object_hash, object_read, object_write,
+};
+use rustgit::models::object::{ByteString, GitObject, GitObjectTrait};
 use rustgit::models::repo::Repository;
 use std::fs::{create_dir_all, write};
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::process::Command;
 
 use tempfile::tempdir;
 
@@ -190,7 +193,7 @@ fn test_object_write_is_readable_by_real_git_cli_local_dir() {
     // let generated_hash = object_write(&repo, &mock_blob).unwrap().to_string();
 
     // 4. Use the REAL Git installation on your machine to query the database
-    let git_output = std::process::Command::new("git")
+    let git_output = Command::new("git")
         .arg("-C")
         .arg(&repo_path)
         .arg("cat-file")
@@ -229,4 +232,43 @@ fn test_object_write_is_readable_by_real_git_cli_local_dir() {
 
     let git_read_string = String::from_utf8(git_output.stdout).unwrap();
     assert_eq!(git_read_string, "hello\n");
+}
+
+#[test]
+fn test_cmd_cat_file_execution() {
+    // 1. Pick a file in your repo to act as the target
+    let target_file = "src/main.rs";
+    let object_type = "blob";
+
+    // 2. Query git hash-object to find out what its hash should be
+    let hash_output = Command::new("git")
+        .args(["hash-object", "-w", target_file])
+        .output()
+        .expect("Failed to run git hash-object");
+
+    let hash_str = String::from_utf8(hash_output.stdout)
+        .expect("Invalid UTF-8 from git")
+        .trim()
+        .to_string();
+
+    // 3. Query git cat-file to get the exact expected stdout payload
+    let git_cat_output = Command::new("git")
+        .args(["cat-file", "-p", &hash_str])
+        .output()
+        .expect("Failed to run git cat-file");
+
+    let expected_bytes = git_cat_output.stdout;
+
+    // 4. Mirror the variables you are passing to your production command
+    // Adjust these if your project wraps strings/bytes into custom types
+    let object_type_bytes = object_type.as_bytes();
+
+    // 5. Create a dynamic vector to capture the output instead of stdout
+    let mut actual_bytes = ByteString::new();
+
+    // 6. Run your exact line of code
+    cmd_cat_file(&mut actual_bytes, object_type_bytes, &hash_str);
+
+    // 7. Verify the output bytes match what git itself printed
+    assert_eq!(actual_bytes, expected_bytes);
 }
