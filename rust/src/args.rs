@@ -42,6 +42,7 @@ enum Commands {
 
 pub fn parse() {
     let cli = Cli::parse();
+    let mut writer = std::io::stdout();
 
     match cli.command {
         Commands::Init { path } => cmd_init(path),
@@ -49,8 +50,7 @@ pub fn parse() {
             object_type,
             object,
         } => {
-            println!("Reading {:?} object {}", object_type, object);
-            cmd_cat_file(object_type.as_bytes(), &object);
+            cmd_cat_file(&mut writer, object_type.as_bytes(), &object);
         } // Commands::HashObject {
           //     object_type,
           //     write,

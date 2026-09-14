@@ -7,7 +7,7 @@ use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 // use std::path::PathBuf;
 // use crate::models::object::GitObject;
 use hex;
@@ -94,23 +94,21 @@ pub fn object_find(
     hash.to_string()
 }
 
-pub fn print_bytes(data: ByteString) {
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-    if let Err(e) = handle.write_all(&data) {
+pub fn print_bytes<W: Write>(writer: &mut W, data: ByteString) {
+    if let Err(e) = writer.write_all(&data) {
         eprintln!("Failed to print to stdout {}", e)
     }
-    let _ = handle.flush();
+    let _ = writer.flush();
 }
 
-pub fn cat_file(repo: &Repository, kind: ByteSlice, hash: HashSlice) {
+pub fn cat_file<W: Write>(writer: &mut W, repo: &Repository, kind: ByteSlice, hash: HashSlice) {
     let hash = object_find(repo, hash, kind, true);
     let obj = object_read(repo, &hash);
     let data = obj.dump();
-    print_bytes(data);
+    print_bytes(writer, data);
 }
 
-pub fn cmd_cat_file(kind: ByteSlice, hash: HashSlice) {
+pub fn cmd_cat_file<W: Write>(writer: &mut W, kind: ByteSlice, hash: HashSlice) {
     let repo = Repository::load(".");
-    cat_file(&repo, kind, hash);
+    cat_file(writer, &repo, kind, hash);
 }
