@@ -1,5 +1,6 @@
+use crate::commands::hash::cmd_cat_file;
 use crate::init::cmd_init;
-// use crate::models::object::ObjectType;
+use crate::models::parser::ObjectType;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -16,15 +17,14 @@ enum Commands {
         path: String,
     },
     // / Provide content of repository objects
-    // CatFile {
-    //     /// Specify the type
-    //     #[arg(value_enum)]
-    //     object_type: ObjectType,
+    CatFile {
+        /// Specify the type
+        #[arg(value_enum)]
+        object_type: ObjectType,
 
-    //     /// The object to display
-    //     object: String,
-    // },
-
+        /// The object to display
+        object: String,
+    },
     // /// Compute object ID and optionally creates a blob from a file
     // HashObject {
     //     /// Specify the type
@@ -45,23 +45,22 @@ pub fn parse() {
 
     match cli.command {
         Commands::Init { path } => cmd_init(path),
-        // Commands::CatFile {
-        //     object_type,
-        //     object,
-        // } => {
-        //     println!("Reading {:?} object {}", object_type, object);
-        //     // call your cmd_cat_file(object_type, object) here
-        // }
-        // Commands::HashObject {
-        //     object_type,
-        //     write,
-        //     path,
-        // } => {
-        //     if write {
-        //         println!("Writing {:?} to database from {}", object_type, path);
-        //     }
-        //     println!("Computing hash of database from {}", path);
-        //     // call your cmd_hash_object(...) here
-        // }
+        Commands::CatFile {
+            object_type,
+            object,
+        } => {
+            println!("Reading {:?} object {}", object_type, object);
+            cmd_cat_file(object_type.as_bytes(), &object);
+        } // Commands::HashObject {
+          //     object_type,
+          //     write,
+          //     path,
+          // } => {
+          //     if write {
+          //         println!("Writing {:?} to database from {}", object_type, path);
+          //     }
+          //     println!("Computing hash of database from {}", path);
+          //     // call your cmd_hash_object(...) here
+          // }
     }
 }

@@ -7,7 +7,7 @@ use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 // use std::path::PathBuf;
 // use crate::models::object::GitObject;
 use hex;
@@ -83,4 +83,34 @@ pub fn object_write(repo: &Repository, obj: &GitObject) -> HashString {
         encoder.finish().expect("Failed to finish writing");
     }
     hash
+}
+
+pub fn object_find(
+    repo: &Repository,
+    hash: HashSlice,
+    kind: ByteSlice,
+    follow: bool,
+) -> HashString {
+    hash.to_string()
+}
+
+pub fn print_bytes(data: ByteString) {
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
+    if let Err(e) = handle.write_all(&data) {
+        eprintln!("Failed to print to stdout {}", e)
+    }
+    let _ = handle.flush();
+}
+
+pub fn cat_file(repo: &Repository, kind: ByteSlice, hash: HashSlice) {
+    let hash = object_find(repo, hash, kind, true);
+    let obj = object_read(repo, &hash);
+    let data = obj.dump();
+    print_bytes(data);
+}
+
+pub fn cmd_cat_file(kind: ByteSlice, hash: HashSlice) {
+    let repo = Repository::load(".");
+    cat_file(&repo, kind, hash);
 }

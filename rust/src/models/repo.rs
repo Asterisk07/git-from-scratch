@@ -129,17 +129,25 @@ impl Repository {
         con
     }
 
-    pub fn find(path: PathBuf) {
+    fn _find(path: &Path) -> PathBuf {
         // need canocical path
-        let x = path.join(".git");
-        if x.is_dir() {
-            return println!("found git dir at {:?}", x);
+
+        if path.join(".git").is_dir() {
+            return path.to_path_buf();
         }
-        // println!("Se at {:?}", path);
         let path = path
             .parent()
-            .expect(&format!("No git repo found at {:?}", path))
-            .to_path_buf();
-        return Self::find(path);
+            .expect(&format!("No git repo found at {:?}", path));
+        Self::_find(path)
+    }
+
+    pub fn find(path: impl AsRef<Path>) -> PathBuf {
+        let path = absolute(path.as_ref()).expect("Invalid path");
+        Self::_find(&path)
+    }
+
+    pub fn load(path: impl AsRef<Path>) -> Self {
+        let path = Self::find(path);
+        Self::new(path, false)
     }
 }
