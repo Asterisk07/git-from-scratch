@@ -3,9 +3,11 @@ use crate::models::object::{
     ByteSlice, ByteString, GitObject, GitObjectTrait, HashSlice, HashString, byte_find,
 };
 use crate::models::repo::Repository;
+use flate2::Compression;
 use flate2::read::ZlibDecoder;
+use flate2::write::ZlibEncoder;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 // use std::path::PathBuf;
 // use crate::models::object::GitObject;
 use hex;
@@ -70,8 +72,15 @@ pub fn object_hash(obj: &GitObject) -> HashString {
 }
 
 pub fn object_write(repo: &Repository, obj: &GitObject) -> HashString {
-    let hash = object_hash(&obj);
+    let data = object_encode(&obj);
+    let hash = hash(&data);
     let path = repo.hash_path(&hash);
-    todo!(); //write to file logic
+    let path = repo.file(path);
+    if !path.exists() {
+        let file = File::create(path).expect("Failed to create file");
+        let mut encoder = ZlibEncoder::new(file, Compression::default());
+        encoder.write_all(&data).expect("Error writing to file");
+        encoder.finish().expect("Failed to finish writing");
+    }
     hash
 }
