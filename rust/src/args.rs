@@ -1,4 +1,4 @@
-use crate::commands::hash::cmd_cat_file;
+use crate::commands::hash::{cmd_cat_file, cmd_hash_object};
 use crate::init::cmd_init;
 use crate::models::parser::ObjectType;
 use clap::{Parser, Subcommand};
@@ -25,19 +25,19 @@ enum Commands {
         /// The object to display
         object: String,
     },
-    // /// Compute object ID and optionally creates a blob from a file
-    // HashObject {
-    //     /// Specify the type
-    //     #[arg(short = 't', value_enum, default_value = "blob")]
-    //     object_type: ObjectType,
+    /// Compute object ID and optionally creates a blob from a file
+    HashObject {
+        /// Specify the type
+        #[arg(short = 't', value_enum, default_value = "blob")]
+        object_type: ObjectType,
 
-    //     /// Actually write the object into the database
-    //     #[arg(short = 'w')]
-    //     write: bool,
+        /// Actually write the object into the database
+        #[arg(short = 'w')]
+        write: bool,
 
-    //     /// Read object from <file>
-    //     path: String,
-    // },
+        /// Read object from <file>
+        path: String,
+    },
 }
 
 pub fn parse() {
@@ -51,16 +51,14 @@ pub fn parse() {
             object,
         } => {
             cmd_cat_file(&mut writer, object_type.as_bytes(), &object);
-        } // Commands::HashObject {
-          //     object_type,
-          //     write,
-          //     path,
-          // } => {
-          //     if write {
-          //         println!("Writing {:?} to database from {}", object_type, path);
-          //     }
-          //     println!("Computing hash of database from {}", path);
-          //     // call your cmd_hash_object(...) here
-          // }
+        }
+        Commands::HashObject {
+            object_type,
+            write,
+            path,
+        } => {
+            let hash = cmd_hash_object(object_type.as_bytes(), &path, write);
+            println!("{}", hash);
+        }
     }
 }

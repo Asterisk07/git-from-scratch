@@ -6,12 +6,10 @@ use crate::models::repo::Repository;
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
-use std::fs::File;
-use std::io::{Read, Write};
-// use std::path::PathBuf;
-// use crate::models::object::GitObject;
 use hex;
 use sha1::{Digest, Sha1};
+use std::fs::{self, File};
+use std::io::{Read, Write};
 use std::str::from_utf8;
 
 pub fn object_read(repo: &Repository, hash: HashSlice) -> GitObject {
@@ -108,7 +106,29 @@ pub fn cat_file<W: Write>(writer: &mut W, repo: &Repository, kind: ByteSlice, ha
     print_bytes(writer, data);
 }
 
+/// Streams the decompressed object contents directly to the destination writer.
+/// This prevents allocating massive files entirely in memory.
 pub fn cmd_cat_file<W: Write>(writer: &mut W, kind: ByteSlice, hash: HashSlice) {
     let repo = Repository::load(".");
     cat_file(writer, &repo, kind, hash);
+}
+
+pub fn object_from_file(kind: ByteSlice, path: &str) -> GitObject {
+    let data = fs::read(path).expect("Failed to read");
+    match &kind[..] {
+        b"blob" => GitObject::Blob(Blob::new(Some(data))),
+        _ => panic!("Unsupported TYPE {:?}", &kind[..]),
+    }
+}
+
+/// Computes the object hash and returns the tiny 40-character hex signature directly.
+/// Because the hash string is small, it can be safely passed up the call stack.
+pub fn cmd_hash_object(kind: ByteSlice, path: &str, write_flag: bool) -> HashString {
+    let obj = object_from_file(kind, path);
+    if write_flag {
+        let repo = Repository::load(".");
+        object_write(&repo, &obj)
+    } else {
+        object_hash(&obj)
+    }
 }

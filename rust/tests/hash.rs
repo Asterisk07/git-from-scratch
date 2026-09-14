@@ -2,11 +2,11 @@ use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use rustgit::commands::hash::{
-    cmd_cat_file, object_encode, object_hash, object_read, object_write,
+    cmd_cat_file, cmd_hash_object, object_encode, object_hash, object_read, object_write,
 };
 use rustgit::models::object::{ByteString, GitObject, GitObjectTrait};
 use rustgit::models::repo::Repository;
-use std::fs::{create_dir_all, write};
+use std::fs::{self, File, create_dir_all, write};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::process::Command;
@@ -271,4 +271,114 @@ fn test_cmd_cat_file_execution() {
 
     // 7. Verify the output bytes match what git itself printed
     assert_eq!(actual_bytes, expected_bytes);
+}
+
+#[test]
+fn test_cmd_hash_object_read_only_with_unique_file() {
+    // 1. Fabricate a completely unique temporary file name and string content
+    let temp_filename = "test_transient_sample_file.txt";
+    let file_content = b"Completely unique string payload to guarantee a fresh SHA-1 hash! 554433";
+
+    // 2. Write the file onto the hard drive so the official git binary can see it
+    let mut file = File::create(temp_filename).expect("Failed to create temporary test file");
+    file.write_all(file_content)
+        .expect("Failed to write test file payload");
+
+    // 3. Query the official git command to calculate the expected reference hash string
+    let git_hash_output = Command::new("git")
+        .args(["hash-object", temp_filename])
+        .output()
+        .expect("Failed to run official git hash-object");
+
+    let expected_hash_str = String::from_utf8(git_hash_output.stdout)
+        .expect("Invalid UTF-8 output from git")
+        .trim()
+        .to_string();
+
+    // 4. Mirror your application's input types (Adjust conversions if necessary)
+    let object_type_bytes = b"blob";
+
+    // 5. Execute your code in memory (write_flag = false ensures NO write happens to .git/objects)
+    let actual_hash_string = cmd_hash_object(object_type_bytes, temp_filename, false);
+
+    // 6. CRITICAL HOUSEKEEPING: Delete the transient file from disk immediately
+    // Even if the upcoming assertion fails, we run this step so it doesn't leave clutter.
+    let _ = fs::remove_file(temp_filename);
+
+    // 7. Verify that your application's calculation matches Git's baseline perfectly
+    assert_eq!(actual_hash_string.to_string(), expected_hash_str);
+}
+
+#[test]
+fn test_cmd_hash_object_with_live_write_and_cleanup() {
+    // 1. Setup a unique name and text body to guarantee a brand-new object hash
+    let temp_filename = "test_transient_write_target.txt";
+    let unique_payload = b"Transient write token signature verification framework: 123456789";
+
+    // 2. Write the file onto the disk workspace so your loader can grab it
+    let mut file = File::create(temp_filename).expect("Failed to create transient test file");
+    file.write_all(unique_payload)
+        .expect("Failed to populate test file content");
+
+    // 3. Mirror your module's types
+    let object_type_bytes = b"blob";
+
+    // 4. Run your write loop (write_flag = true)
+    // This calculates the hash string AND saves the compressed object to your .git folder
+    let hash_str = cmd_hash_object(object_type_bytes, temp_filename, true);
+    // let hash_str = generated_hash.to_string();
+
+    // 5. Clean up the original text file from your workspace immediately
+    let _ = fs::remove_file(temp_filename);
+
+    // 6. VERIFICATION A: Confirm the compressed file was created in your .git database
+    let repo = Repository::load(".");
+    let git_db_object_path = repo.file(repo.hash_path(&hash_str));
+
+    assert!(
+        git_db_object_path.exists(),
+        "The object file was not successfully persisted to the database path at {:?}",
+        git_db_object_path
+    );
+
+    // 7. VERIFICATION B: Verify your cat_file engine can decompress and read it back perfectly
+    let mut actual_readback_bytes = Vec::new();
+    cmd_cat_file(&mut actual_readback_bytes, object_type_bytes, &hash_str);
+
+    // Assert that the data retrieved from the database matches the original payload exactly
+    assert_eq!(actual_readback_bytes, unique_payload);
+
+    // 8. ABSOLUTE CLEANUP: Permanently delete the generated database file
+    // This ensures the test leaves zero footprints or dangling blobs behind in your repo
+    let _ = fs::remove_file(&git_db_object_path);
+
+    // Optional: Attempt to remove the 2-character parent folder if it is now empty
+    if let Some(parent_dir) = git_db_object_path.parent() {
+        let _ = fs::remove_dir(parent_dir); // Fails safely if other legitimate objects are inside it
+    }
+}
+
+#[test]
+fn test_hash_object_to_cat_file_pipeline() {
+    // 1. Target the actual file from your command-line example
+    let target_file = "src/main.rs";
+    let object_type_bytes = b"blob";
+
+    // 2. Step 1 of your CLI flow: Compute the hash string from the file
+    // This simulates running: git hash-object src/main.rs
+    let hash_str = cmd_hash_object(object_type_bytes, target_file, false);
+
+    // 3. Prepare an in-memory byte buffer to act as your standard output (stdout) writer
+    let mut actual_stdout_bytes = Vec::new();
+
+    // 4. Step 2 of your CLI flow: Feed that generated hash directly into cat-file
+    // This simulates running: git cat-file blob <hash>
+    cmd_cat_file(&mut actual_stdout_bytes, object_type_bytes, &hash_str);
+
+    // 5. Read the true physical contents of src/main.rs directly from disk as a baseline
+    let expected_file_bytes =
+        std::fs::read(target_file).expect("Failed to read src/main.rs baseline for verification");
+
+    // 6. Assert that your cat-file streaming output perfectly matches the original file text
+    assert_eq!(actual_stdout_bytes, expected_file_bytes);
 }
